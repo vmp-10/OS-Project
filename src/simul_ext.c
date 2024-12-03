@@ -42,11 +42,15 @@ int main()
     int dirEntry;
     int saveData;
     FILE *file;
+        
+    // Open the binary partition file
+    file = fopen("partition.bin", "r+b");
+    if (!file) {
+      perror("Error opening partition file");
+      return 1;
+    }    
     
     // Read the entire file in one go
-    // (Placeholder for logic to read the binary file)
-    
-    file = fopen("partition.bin", "r+b");
     fread(&fileData, BLOCK_SIZE, MAX_PARTITION_BLOCKS, file);    
     
     // Map binary file sections into respective structures
@@ -57,34 +61,39 @@ int main()
     memcpy(&memData, (EXT_DATOS *)&fileData[4], MAX_DATA_BLOCKS * BLOCK_SIZE);
     
     // Command processing loop
-   for (;;){
-       do {
-         printf(">> ");
-         fflush(stdin);
-         fgets(command, COMMAND_LENGTH, stdin);
-       } while (CheckCommand(command, cmd, arg1, arg2) != 0);
-       
-       if (strcmp(cmd, "dir") == 0) {
-         ListDirectory(&directory, &ext_blq_inodos);
-         continue;
-       }
+    while (1) {
+      do {
+        printf(">> ");
+        fflush(stdin);
+        fgets(command, COMMAND_LENGTH, stdin);
+      } while (CheckCommand(command, cmd, arg1, arg2) != 0);
 
-       // Handle commands like rename, remove, copy, etc.
-       // Save metadata for these operations
-       SaveInodesAndDirectory(&directory, &ext_blq_inodos, file);
-       SaveByteMaps(&ext_bytemaps, file);
-       SaveSuperBlock(&ext_superblock, file);
-       if (saveData) {
-         SaveData(&memData, file);
-       }
+      // Process the "dir" command
+      if (strcmp(cmd, "dir") == 0) {
+        ListDirectory(directory, &ext_blq_inodos);
+        continue;
+      }
 
-       saveData = 0;
-       // If the command is "exit", ensure all metadata is written
-       // Write remaining data and close the file
-       if (strcmp(cmd, "exit") == 0) {
-         SaveData(&memData, file);
-         fclose(file);
-         return 0;
-       }
-   }
+      // Handle other commands like rename, delete, copy, etc.
+
+
+      // Save metadata after modifying the filesystem
+      SaveInodesAndDirectory(directory, &ext_blq_inodos, file);
+      SaveByteMaps(&ext_bytemaps, file);
+      SaveSuperBlock(&ext_superblock, file);
+
+      if (saveData) {
+        SaveData(memData, file);
+      }
+
+      saveData = 0; // Reset saveData flag after saving
+
+      // Handle the "exit" command
+      if (strcmp(cmd, "exit") == 0) {
+        SaveData(memData, file);
+        fclose(file);
+        return 0;
+      }
+    }
+  return 0;
 }
