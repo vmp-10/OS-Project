@@ -3,8 +3,7 @@
 #define MAX_FILES 20
 #define MAX_DATA_BLOCKS 96
 #define FIRST_DATA_BLOCK 4
-#define MAX_PARTITION_BLOCKS MAX_DATA_BLOCKS+FIRST_DATA_BLOCK
-  // Superblock + inode bitmap and block bitmap + inodes + directory
+#define MAX_PARTITION_BLOCKS MAX_DATA_BLOCKS+FIRST_DATA_BLOCK     // Superblock + inode bitmap and block bitmap + inodes + directory
 #define MAX_BLOCKS_PER_INODE 7
 #define FILE_NAME_LENGTH 17
 #define NULL_INODE 0xFFFF
@@ -12,12 +11,12 @@
 
 /* Superblock structure */
 typedef struct {
-  unsigned int s_inodes_count;          							/* Total inodes in the partition */
-  unsigned int s_blocks_count;          							/* Total blocks in the partition */
-  unsigned int s_free_blocks_count;     							/* Free blocks available */
-  unsigned int s_free_inodes_count;     							/* Free inodes available */
-  unsigned int s_first_data_block;      							/* First data block */
-  unsigned int s_block_size;            							/* Block size in bytes */
+  unsigned int s_inodes_count;          							            /* Total inodes in the partition */
+  unsigned int s_blocks_count;          							            /* Total blocks in the partition */
+  unsigned int s_free_blocks_count;     							            /* Free blocks available */
+  unsigned int s_free_inodes_count;     							            /* Free inodes available */
+  unsigned int s_first_data_block;      							            /* First data block */
+  unsigned int s_block_size;            							            /* Block size in bytes */
   unsigned char s_padding[BLOCK_SIZE-6*sizeof(unsigned int)]; 		/* Zero-filled padding */
 } EXT_SIMPLE_SUPERBLOCK;
 
@@ -30,8 +29,8 @@ typedef struct {
 
 /* Inode structure */
 typedef struct {
-  unsigned int file_size; 											/* Size of the file in bytes */
-  unsigned short int i_nbloque[MAX_BLOCKS_PER_INODE]; 				/* Block numbers associated with the inode */
+  unsigned int file_size; 											            /* Size of the file in bytes */
+  unsigned short int i_nblock[MAX_BLOCKS_PER_INODE]; 				/* Block numbers associated with the inode */
 } EXT_SIMPLE_INODE;
 
 /* List of inodes, fit within a single block */

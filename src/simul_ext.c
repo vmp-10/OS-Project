@@ -55,7 +55,25 @@ int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name) {
 }
 
 void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes) {
-    printf("ListDirectory called.\n");
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (directory[i].dir_inode != NULL_INODE) {
+            //Looks up directory[i].dir_inode in inodes array
+            EXT_SIMPLE_INODE *inode = &inodes->inode_blocks[directory[i].dir_inode];
+            
+            printf("%-14s\tSize: %d\t I-node: %d, Blocks: ", 
+                            directory[i].file_name, 
+                            inode->file_size, 
+                            directory[i].dir_inode);
+
+            // Get all block numbers associated with this inode
+            for (int j = 0; j < MAX_BLOCKS_PER_INODE; j++) {
+                if (inode->i_nblock[j] != NULL_BLOCK) {  
+                    printf("%d ", inode->i_nblock[j]);
+                }
+            }
+            printf("\n");
+        }
+    }
 }
 
 int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName) {
