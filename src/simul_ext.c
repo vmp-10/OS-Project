@@ -1,6 +1,5 @@
 #include<stdio.h>
 #include<string.h>
-#include <stdlib.h> //For itoa (Binary conversion)
 #include<ctype.h>
 #include "headers.h"
 
