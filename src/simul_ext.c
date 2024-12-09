@@ -56,6 +56,13 @@ void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes) {
 
 int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName) {
     printf("Rename called with oldName: %s, newName: %s\n", oldName, newName);
+
+    //Check if file exists
+    printf("ERROR: File %s not found.\n", oldName);
+
+    //Check if the name does not already exist
+    printf("ERROR: File %s already exists.\n", newName);
+
     return 0; // Temporary default
 }
 
@@ -197,10 +204,9 @@ int main()
         fgets(command, COMMAND_LENGTH, stdin);
       } while (CheckCommand(command, cmd, arg1, arg2) != 0);
 
-
       // Basically a switch case for all commands
       if (strcmp(cmd, "dir") == 0) {
-        ListDirectory(directory, &ext_blq_inodos);
+          ListDirectory(directory, &ext_blq_inodos);
       } 
       else if (strcmp(command, "info") == 0) {
           ReadSuperBlock(&ext_superblock);
