@@ -55,7 +55,8 @@ int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name) {
 }
 
 void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes) {
-    for (int i = 0; i < MAX_FILES; i++) {
+    //i = 1 to avoid root folder
+    for (int i = 1; i < MAX_FILES; i++) {
         if (directory[i].dir_inode != NULL_INODE) {
             //Looks up directory[i].dir_inode in inodes array
             EXT_SIMPLE_INODE *inode = &inodes->inode_blocks[directory[i].dir_inode];
