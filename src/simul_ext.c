@@ -6,17 +6,17 @@
 #define COMMAND_LENGTH 100
 
 // Function prototypes
-void PrintByteMaps(EXT_BYTE_MAPS *ext_bytemaps);
-int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2);
-void ReadSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup);
+void PrintByteMaps(EXT_BYTE_MAPS *ext_bytemaps);                                              //BYTEMAPS command
+int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2);                    
+void ReadSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup);                                             //INFO command
 int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name);
-void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes);
-int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName);
-int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name);
+void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes);                         //DIR command
+int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName);   //RENAME command
+int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name);  //DELETE command
 int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
                EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
                char *name, FILE *file);
-int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
+int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,                                    //COPY command
              EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
              EXT_DATOS *memData, char *srcName, char *destName, FILE *file);
 void SaveInodesAndDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, FILE *file);
@@ -24,56 +24,76 @@ void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file);
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file);
 void SaveData(EXT_DATOS *memData, FILE *file);
 
+
+
+
 void PrintByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
-    // Function body
+    printf("PrintByteMaps called.\n");
+
+    printf("I-nodes : ");
+    printf("Blocks [0-25] :");
+
 }
+
 void ReadSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
-    // Function body
+    printf("Superblock Information:\n");
+    printf("-> Block size: %u bytes\n", psup->s_block_size);
+    printf("-> Inodes: %u\n", psup->s_inodes_count);
+    printf("-> Free inodes: %u\n", psup->s_free_inodes_count);
+    printf("-> Blocks count: %u\n", psup->s_blocks_count);
+    printf("-> Free blocks: %u\n", psup->s_free_blocks_count);
+    printf("-> First data block: %u\n", psup->s_first_data_block);
 }
+
 int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name) {
-    // Function body
-    return 0; // Default return
+    printf("FindFile called with name: %s\n", name);
+    return 0; // Temporary default
 }
+
 void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes) {
-    // Function body
+    printf("ListDirectory called.\n");
 }
+
 int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName) {
-    // Function body
-    return 0; // Default return
+    printf("Rename called with oldName: %s, newName: %s\n", oldName, newName);
+    return 0; // Temporary default
 }
+
 int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name) {
-    // Function body
-  
-
-
-
-
-    return 0; // Default return
+    printf("Print called with name: %s\n", name);
+    return 0; // Temporary default
 }
+
 int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *name, FILE *file) {
-  // Function body
-  return 0; // Default return
+    printf("Delete called with name: %s\n", name);
+    return 0; // Temporary default
 }
+
 int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
          EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
          EXT_DATOS *memData, char *srcName, char *destName, FILE *file) {
-  // Function body
-  return 0; // Default return
+    printf("Copy called with srcName: %s, destName: %s\n", srcName, destName);
+    return 0; // Temporary default
 }
+
 void SaveInodesAndDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, FILE *file) {
-    // Function body
+    printf("SaveInodesAndDirectory called.\n");
 }
+
 void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file) {
-    // Function body
+    printf("SaveByteMaps called.\n");
 }
+
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file) {
-    // Function body
+    printf("SaveSuperBlock called.\n");
 }
+
 void SaveData(EXT_DATOS *memData, FILE *file) {
-    // Function body
+    printf("SaveData called.\n");
 }
+
 int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2) {
   // Check if input is empty or just whitespace
   if (commandStr == NULL || strlen(commandStr) == 0 || commandStr[0] == '\n') {
@@ -124,7 +144,6 @@ int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2) {
     strcmp(command, "copy")     == 0 ||
     strcmp(command, "exit")     == 0
   ) {
-    printf("DEBUG: Valid\n");
     return 0; 
   } else {
     printf("ERROR: Illegal command [info, bytemaps, dir, rename, print, remove, copy, exit]\n");
@@ -178,21 +197,30 @@ int main()
         fgets(command, COMMAND_LENGTH, stdin);
       } while (CheckCommand(command, cmd, arg1, arg2) != 0);
 
-      // Process the "dir" command
+
+      // Basically a switch case for all commands
       if (strcmp(cmd, "dir") == 0) {
         ListDirectory(directory, &ext_blq_inodos);
-        continue;
-      }
-
-      // Handle other commands like rename, delete, copy, etc.
-      if (strcmp(cmd, "info" == 0))
-      {
-        
-      }
+      } 
+      else if (strcmp(command, "info") == 0) {
+          ReadSuperBlock(&ext_superblock);
+      } 
+      else if (strcmp(command, "bytemaps") == 0) {
+          PrintByteMaps(&ext_bytemaps);
+      } 
+      else if (strcmp(command, "rename") == 0) {
+          Rename(directory, &ext_blq_inodos, arg1, arg2);
+      } 
+      else if (strcmp(command, "print") == 0) {
+          Print(directory, &ext_blq_inodos, memData, arg1);
+      } 
+      else if (strcmp(command, "remove") == 0) {
+          Delete(directory, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, arg1, file);
+      } 
+      else if (strcmp(command, "copy") == 0) {
+          Copy(directory, directory, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, arg1, arg2, file);
+      } 
       
-      //USED FOR CAT: Print(directory, &ext_blq_inodos, memData, );
-
-
       // Save metadata after modifying the filesystem
       SaveInodesAndDirectory(directory, &ext_blq_inodos, file);
       SaveByteMaps(&ext_bytemaps, file);
