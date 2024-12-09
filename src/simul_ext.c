@@ -10,11 +10,11 @@
 void PrintByteMaps(EXT_BYTE_MAPS *ext_bytemaps);                                              //BYTEMAPS command
 int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2);                    
 void ReadSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup);                                             //INFO command
-int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name);
+int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name);                   
 void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes);                         //DIR command
 int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName);   //RENAME command
-int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name);  //DELETE command
-int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
+int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name);  //CAT command
+int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,                                  //DELETE command
                EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
                char *name, FILE *file);
 int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,                                    //COPY command
