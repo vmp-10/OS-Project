@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<string.h>
+#include <stdlib.h> //For itoa (Binary conversion)
 #include<ctype.h>
 #include "headers.h"
 
@@ -24,15 +25,18 @@ void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file);
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file);
 void SaveData(EXT_DATOS *memData, FILE *file);
 
-
-
-
 void PrintByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
-    printf("PrintByteMaps called.\n");
+    printf("I-nodes: ");
+    for (int i = 0; i < MAX_INODES; i++) {
+        printf("%d ", ext_bytemaps->bmap_inodes[i] != 0);  // Prints 1 if byte is non-zero, 0 if zero
+    }
+    printf("\n");
 
-    printf("I-nodes : ");
-    printf("Blocks [0-25] :");
-
+    printf("Blocks [0-25]: ");
+    for (int i = 0; i < 25; i++) { // 25 blocks as requested
+        printf("%d ", ext_bytemaps->bmap_blocks[i] != 0);  // Prints 1 if byte is non-zero, 0 if zero
+    }
+    printf("\n");
 }
 
 void ReadSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup) {
