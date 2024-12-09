@@ -78,15 +78,35 @@ void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes) {
 }
 
 int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName) {
-    printf("Rename called with oldName: %s, newName: %s\n", oldName, newName);
+    //Check if file name is too big 
+    if (strlen(newName) >= FILE_NAME_LENGTH) {
+        printf("Error: New file name too long.\n");
+        return -1;
+    }
 
-    //Check if file exists
-    printf("ERROR: File %s not found.\n", oldName);
+    //Check if the name already exists
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (strcmp(directory[i].file_name, newName) == 0) {
+            printf("ERROR: File %s already exists.\n", newName);
+            return -1;
+        }
+    }
 
-    //Check if the name does not already exist
-    printf("ERROR: File %s already exists.\n", newName);
+    // Find the "oldname" file
+    for (int i = 0; i < MAX_FILES; i++) {
+        if (strcmp(directory[i].file_name, oldName) == 0) {
+            
+            // Rename the file
+            strncpy(directory[i].file_name, newName, FILE_NAME_LENGTH - 1);
+            directory[i].file_name[FILE_NAME_LENGTH - 1] = '\0'; // Ensure null termination
 
-    return 0; // Temporary default
+            return 0;
+        }
+    }
+
+    // File not found
+    printf("Error: File '%s' not found.\n", oldName);
+    return -1;
 }
 
 int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name) {
