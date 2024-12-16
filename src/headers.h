@@ -41,8 +41,8 @@ typedef struct {
 
 /* Individual directory entry */
 typedef struct {
-  char file_name[FILE_NAME_LENGTH]; 								/* Name of the file */
-  unsigned short int dir_inode; 									/* Inode number for the file */
+  char file_name[FILE_NAME_LENGTH]; 								          /* Name of the file */
+  unsigned short int dir_inode; 									            /* Inode number for the file */
 } EXT_ENTRY_DIR;
 
 /* Data block */

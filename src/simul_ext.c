@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<string.h>
+#include<stdlib.h> // Used for clearing the terminal
 #include<ctype.h>
 #include "headers.h"
 
@@ -118,8 +119,49 @@ int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, 
 int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *name, FILE *file) {
-    printf("Delete called with name: %s\n", name);
-    return 0; // Temporary default
+    
+    // Find the file
+    int inodeIndex = FindFile(directory, inodes, name);
+    if (inodeIndex == -1) {
+        printf("Error: File '%s' not found.\n", name);
+        return -1;
+    }
+
+    int inodeNum = directory[inodeIndex].dir_inode;                 // Get i-node number
+    EXT_SIMPLE_INODE *inode = &inodes->inode_blocks[inodeNum];      // Get i-node
+    
+    // Free the blocks associated with the inode
+    for (int i = 0; i < MAX_BLOCKS_PER_INODE; i++) {
+        if (inode->i_nblock[i] != NULL_BLOCK) {
+            int blockNum = inode->i_nblock[i];
+            ext_bytemaps->bmap_blocks[blockNum] = 0;                // Set bytemap as unused
+            ext_superblock->s_free_blocks_count++;                  // Update superblock info
+            inode->i_nblock[i] = NULL_BLOCK;                        // Clear the inode block
+        }
+    }
+    
+    // Free the inode
+    ext_bytemaps->bmap_inodes[inodeNum] = 0;                        // Set bytemap as unused
+    ext_superblock->s_free_inodes_count++;                          // Update superblock info
+    inode->file_size = 0;                                           // Reset the file size
+
+
+    // Remove the directory entry
+    int dirCount = 0;
+    while (directory[dirCount].dir_inode != NULL_INODE && dirCount < MAX_FILES) {
+        dirCount++;
+    }
+
+    // Shift directory entries to remove the gap
+    for (int i = inodeIndex; i < dirCount - 1; i++) {
+        directory[i] = directory[i + 1];
+    }
+    // Clear the last directory entry
+    directory[dirCount - 1].dir_inode = NULL_INODE;
+
+    // Save the updated directory and inodes to the file?
+
+    return 0; 
 }
 
 int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
@@ -130,19 +172,15 @@ int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
 }
 
 void SaveInodesAndDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, FILE *file) {
-    printf("SaveInodesAndDirectory called.\n");
 }
 
 void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file) {
-    printf("SaveByteMaps called.\n");
 }
 
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file) {
-    printf("SaveSuperBlock called.\n");
 }
 
 void SaveData(EXT_DATOS *memData, FILE *file) {
-    printf("SaveData called.\n");
 }
 
 int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2) {
@@ -221,6 +259,9 @@ int main()
     int saveData;
     FILE *file;
         
+    // Clear the terminal
+    system("clear");
+
     // Open the binary partition file
     file = fopen("partition.bin", "r+b");
     if (!file) {
