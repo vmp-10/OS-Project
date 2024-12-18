@@ -13,17 +13,17 @@ void ReadSuperBlock(EXT_SIMPLE_SUPERBLOCK *psup);                               
 int FindFile(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *name);                   
 void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes);                         //DIR command
 int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char *newName);   //RENAME command
-int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name);  //CAT command
+int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATA *memData, char *name);  //CAT command
 int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,                                  //DELETE command
                EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
                char *name, FILE *file);
 int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,                                    //COPY command
              EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-             EXT_DATOS *memData, char *srcName, char *destName, FILE *file);
+             EXT_DATA *memData, char *srcName, char *destName, FILE *file);
 void SaveInodesAndDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, FILE *file);
 void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file);
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file);
-void SaveData(EXT_DATOS *memData, FILE *file);
+void SaveData(EXT_DATA *memData, FILE *file);
 
 void PrintByteMaps(EXT_BYTE_MAPS *ext_bytemaps) {
     printf("I-nodes: ");
@@ -111,7 +111,7 @@ int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char
     return 0;
 }
 
-int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATOS *memData, char *name) {
+int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATA *memData, char *name) {
     printf("Print called with name: %s\n", name);
     return 0; // Temporary default
 }
@@ -158,17 +158,158 @@ int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
     }
     // Clear the last directory entry
     directory[dirCount - 1].dir_inode = NULL_INODE;
-
-    // Save the updated directory and inodes to the file?
-
     return 0; 
 }
 
 int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
          EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-         EXT_DATOS *memData, char *srcName, char *destName, FILE *file) {
-    printf("Copy called with srcName: %s, destName: %s\n", srcName, destName);
-    return 0; // Temporary default
+         EXT_DATA *memData, char *srcName, char *destName, FILE *file) {
+    
+    // Find the file
+    int srcInodeIndex = FindFile(directory, inodes, srcName);
+    if (srcInodeIndex == -1) {
+        printf("Error: File '%s' not found.\n", srcName);
+        return -1;
+    }      
+
+    // Check if there's a file named destname
+    int destNameIndex = FindFile(directory, inodes, destName);
+    if (destNameIndex != -1) {
+        printf("ERROR: File '%s' already exists.\n", destNameIndex);
+        return -1;
+    } 
+
+    // Get the i-node data and the i-node
+    int srcInodeNum = directory[srcInodeIndex].dir_inode;                 // Get i-node number
+    EXT_SIMPLE_INODE *srcInode = &inodes->inode_blocks[srcInodeNum];      // Get i-node
+
+    int numBlocks = 0;
+    for (int i = 0; i < MAX_BLOCKS_PER_INODE; i++)
+    {
+      if (srcInode->i_nblock[i] != NULL_BLOCK) 
+      {
+        numBlocks++;
+      }
+    }
+    ext_superblock->s_free_blocks_count -= numBlocks;
+
+    // Find first available inode 
+    int newInodeNum = -1;
+    for (int i = 1; i < MAX_FILES; i++)         // 1 to avoid root folder
+    {
+      if (ext_bytemaps->bmap_inodes[i] == 0)
+      {
+        newInodeNum = i;
+        ext_bytemaps->bmap_inodes[i] = 1;       // Mark inode as used
+        ext_superblock->s_free_inodes_count--;
+        break;
+      }
+    }
+
+    if (newInodeNum == -1) 
+    {
+        printf("ERROR: No free i-nodes available.\n");
+        return -1; 
+    }
+    
+    // Find first available directory entry
+    int dirIndex = -1;
+    for (int i = 0; i < MAX_FILES; i++)
+    {
+      if (directory[i].dir_inode == NULL_INODE) 
+      {
+        dirIndex = i;
+        directory[i].dir_inode = newInodeNum;     // Assign i-node index to the directory
+        strcpy(directory[i].file_name, destName); // Set the file name 
+        break;
+      }
+    }
+
+    if (dirIndex == -1) {
+        printf("ERROR: No space in the directory.\n");
+        return -1;
+    }
+    
+    // Initialize the new inode
+    EXT_SIMPLE_INODE *destInode = &inodes->inode_blocks[newInodeNum];
+    destInode->file_size = srcInode->file_size;
+
+    // Copy data blocks
+    int blocksCopied = 0;
+    for (int i = 0; i < MAX_BLOCKS_PER_INODE; i++) {
+        if (srcInode->i_nblock[i] != NULL_BLOCK) {
+            // Find a free block
+            int freeBlock = -1;
+            for (int j = 0; j < MAX_PARTITION_BLOCKS; j++) {
+                if (ext_bytemaps->bmap_blocks[j] == 0) {  // Free block found
+                    freeBlock = j;
+                    ext_bytemaps->bmap_blocks[j] = 1;     // Mark block as used
+                    ext_superblock->s_free_blocks_count--;
+                    break;
+                }
+            }
+
+            if (freeBlock == -1) {
+                printf("ERROR: No free blocks available. Copy aborted.\n");
+                return -1;
+            }
+
+            // Copy data from source block to destination block
+            memcpy(&memData[freeBlock - FIRST_DATA_BLOCK].data, &memData[srcInode->i_nblock[i] - FIRST_DATA_BLOCK].data, BLOCK_SIZE); //SEGMENTATION FAULT
+            destInode->i_nblock[i] = freeBlock;  // Assign block to new inode
+            blocksCopied++;
+        }
+    }
+
+    return 0; 
+}
+
+int CopyTeacher(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
+           EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
+           EXT_DATA *memdata, char *srcName, char *destName, FILE *file)
+{
+    int i, j, k, tam;
+    unsigned int originBlocks, freeInode, freeBlock, copiedBlock, entryDir;
+    unsigned short int blockNum;
+    originBlocks = 0;
+    freeInode = NULL_INODE;
+    entryDir = 0;
+
+    i = FindFile(directory, inodes, srcName);
+    j = 0;
+    do {
+        blockNum = inodes->inode_blocks[directory[i].dir_inode].i_nblock[j];
+        if (blockNum != NULL_BLOCK) {
+            originBlocks++;
+        }
+        j++;
+    } while ((blockNum != NULL_BLOCK) && (j < MAX_BLOCKS_PER_INODE));
+
+    // Find first free i-node
+
+
+    // Find first free directory entry
+
+
+    for (j = 0; j < MAX_INODES; j++) {
+        freeBlock = 0;
+        do {
+            if (ext_bytemaps->bmap_blocks[k] == 0) {
+                freeBlock = k;
+                ext_bytemaps->bmap_blocks[freeBlock] = 1; // Set bytemap as used
+            }
+            k++;
+        } while ((k < MAX_INODES) && (freeBlock == 0));
+
+        copiedBlock = inodes->inode_blocks[directory[i].dir_inode].i_nblock[j];
+        
+        memcpy(&memdata[freeBlock - FIRST_DATA_BLOCK], &memdata[copiedBlock - FIRST_DATA_BLOCK], BLOCK_SIZE);
+        
+        inodes->inode_blocks[freeInode].i_nblock[j] = freeBlock;
+        ext_superblock->s_free_blocks_count--;
+    }
+  
+    return 0; 
 }
 
 void SaveInodesAndDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, FILE *file) {
@@ -180,7 +321,7 @@ void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file) {
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file) {
 }
 
-void SaveData(EXT_DATOS *memData, FILE *file) {
+void SaveData(EXT_DATA *memData, FILE *file) {
 }
 
 int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2) {
@@ -233,6 +374,19 @@ int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2) {
     strcmp(command, "copy")     == 0 ||
     strcmp(command, "exit")     == 0
   ) {
+    // Additional validation for 'remove' and 'print'
+    if ((strcmp(command, "remove") == 0 || strcmp(command, "print") == 0) && 
+        (strlen(arg1) == 0)) {
+      printf("ERROR: Command '%s' requires an argument.\n", command);
+      return 1; // Return 1 for missing arguments
+    }
+
+    // Additional validation for 'copy' and 'rename'
+    if ((strcmp(command, "copy") == 0 || strcmp(command, "rename") == 0) && 
+        (strlen(arg1) == 0 || strlen(arg2) == 0)) {
+      printf("ERROR: Command '%s' requires two arguments.\n", command);
+      return 1; // Return 1 for missing arguments
+    }
     return 0; 
   } else {
     printf("ERROR: Illegal command [info, bytemaps, dir, rename, print, remove, copy, exit]\n");
@@ -253,8 +407,8 @@ int main()
     EXT_BYTE_MAPS ext_bytemaps;
     EXT_BLQ_INODES ext_blq_inodos;
     EXT_ENTRY_DIR directory[MAX_FILES];
-    EXT_DATOS memData[MAX_DATA_BLOCKS];
-    EXT_DATOS fileData[MAX_PARTITION_BLOCKS];
+    EXT_DATA memData[MAX_DATA_BLOCKS];
+    EXT_DATA fileData[MAX_PARTITION_BLOCKS];
     int dirEntry;
     int saveData;
     FILE *file;
@@ -279,7 +433,7 @@ int main()
     memcpy(&directory, (EXT_ENTRY_DIR *)&fileData[3], BLOCK_SIZE);
     memcpy(&ext_bytemaps, (EXT_BLQ_INODES *)&fileData[1], BLOCK_SIZE);
     memcpy(&ext_blq_inodos, (EXT_BLQ_INODES *)&fileData[2], BLOCK_SIZE);
-    memcpy(&memData, (EXT_DATOS *)&fileData[4], MAX_DATA_BLOCKS * BLOCK_SIZE);
+    memcpy(&memData, (EXT_DATA *)&fileData[4], MAX_DATA_BLOCKS * BLOCK_SIZE);
     
     // Command processing loop
     while (1) {

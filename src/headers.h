@@ -47,5 +47,5 @@ typedef struct {
 
 /* Data block */
 typedef struct{
-  unsigned char data[BLOCK_SIZE]; 	
-} EXT_DATOS;
+  unsigned char data[BLOCK_SIZE]; 	                          /* Data inside the block */
+} EXT_DATA;
