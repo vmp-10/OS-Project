@@ -408,10 +408,10 @@ int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2)
 
 int main()
 {
-    char *command[COMMAND_LENGTH];
-    char *cmd[COMMAND_LENGTH];
-    char *arg1[COMMAND_LENGTH];
-    char *arg2[COMMAND_LENGTH];
+    char command[COMMAND_LENGTH];
+    char cmd[COMMAND_LENGTH];
+    char arg1[COMMAND_LENGTH];
+    char arg2[COMMAND_LENGTH];
 
     int i, j;
     unsigned long int m;
@@ -422,7 +422,6 @@ int main()
     EXT_DATA memData[MAX_DATA_BLOCKS];
     EXT_DATA fileData[MAX_PARTITION_BLOCKS];
     int dirEntry;
-    int saveData;
     FILE *file;
 
     // Clear the terminal
@@ -498,11 +497,13 @@ int main()
         // Handle the "exit" command
         if (strcmp(cmd, "exit") == 0)
         {
+            char saveData[2]; // Char for choice and null terminator
+
             while (1)
             {
-                printf(">> Save data [0/1]: ");
+                printf("Do you want to save data before exiting? Enter 1 (Yes) or 0 (No): ");
                 fflush(stdin);
-                fgets(saveData, sizeof(saveData), stdin); // read the input
+                fgets(saveData, sizeof(saveData), stdin);
 
                 if (strcmp(saveData, "0") == 0)
                 {
@@ -515,7 +516,7 @@ int main()
                 }
                 else
                 {
-                    printf("Invalid input. Please enter either '0' or '1'.\n");
+                    printf("Invalid input. Please enter '0' to exit without saving or '1' to save and exit: ");
                 }
             }
             fclose(file);
