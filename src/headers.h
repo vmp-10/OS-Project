@@ -22,30 +22,30 @@ typedef struct {
 
 /* Bytemaps, fit within a single block */
 typedef struct {
-  unsigned char bmap_blocks[MAX_PARTITION_BLOCKS]; 					/* Bitmap for blocks */
-  unsigned char bmap_inodes[MAX_INODES];           					/* Bitmap for inodes: inodes 0 and 1 reserved, inode 2 for directory */
+  unsigned char bmap_blocks[MAX_PARTITION_BLOCKS]; 					      /* Bitmap for blocks */
+  unsigned char bmap_inodes[MAX_INODES];           					      /* Bitmap for inodes: inodes 0 and 1 reserved, inode 2 for directory */
   unsigned char bmap_padding[BLOCK_SIZE-(MAX_PARTITION_BLOCKS+MAX_INODES)*sizeof(char)];
 } EXT_BYTE_MAPS;
 
 /* Inode structure */
 typedef struct {
-  unsigned int file_size; 											            /* Size of the file in bytes */
-  unsigned short int i_nblock[MAX_BLOCKS_PER_INODE]; 				/* Block numbers associated with the inode */
+  unsigned int file_size; 											                  /* Size of the file in bytes */
+  unsigned short int i_nblock[MAX_BLOCKS_PER_INODE]; 				      /* Block numbers associated with the inode */
 } EXT_SIMPLE_INODE;
 
 /* List of inodes, fit within a single block */
 typedef struct {
-  EXT_SIMPLE_INODE inode_blocks[MAX_INODES]; 									/* Array of inodes */
+  EXT_SIMPLE_INODE inode_blocks[MAX_INODES]; 									    /* Array of inodes */
   unsigned char inode_padding[BLOCK_SIZE-MAX_INODES*sizeof(EXT_SIMPLE_INODE)];
 } EXT_BLQ_INODES;
 
 /* Individual directory entry */
 typedef struct {
-  char file_name[FILE_NAME_LENGTH]; 								          /* Name of the file */
-  unsigned short int dir_inode; 									            /* Inode number for the file */
+  char file_name[FILE_NAME_LENGTH]; 								              /* Name of the file */
+  unsigned short int dir_inode; 									                /* Inode number for the file */
 } EXT_ENTRY_DIR;
 
 /* Data block */
 typedef struct{
-  unsigned char data[BLOCK_SIZE]; 	                          /* Data inside the block */
+  unsigned char data[BLOCK_SIZE]; 	                              /* Data inside the block */
 } EXT_DATA;
