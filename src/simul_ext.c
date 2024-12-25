@@ -181,6 +181,7 @@ int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
     }
     // Clear the last directory entry
     directory[dirCount - 1].dir_inode = NULL_INODE;
+
     return 0;
 }
 
@@ -312,18 +313,28 @@ int Copy(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
 
 void SaveInodesAndDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, FILE *file)
 {
+    // Save directory data
+    fwrite(directory, sizeof(EXT_ENTRY_DIR), 1, file);
+
+    // Save inodes data
+    fwrite(inodes, sizeof(EXT_BLQ_INODES), 1, file);
 }
 
 void SaveByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *file)
 {
+    // Saves bytemaps data
+    fwrite(ext_bytemaps, sizeof(EXT_BYTE_MAPS), 1, file);
 }
 
 void SaveSuperBlock(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *file)
 {
+    // Saves superblock data
+    fwrite(ext_superblock, sizeof(EXT_SIMPLE_SUPERBLOCK), 1, file);
 }
 
 void SaveData(EXT_DATA *memData, FILE *file)
 {
+    fwrite(memData, sizeof(EXT_DATA), 1, file);
 }
 
 int CheckCommand(char *commandStr, char *command, char *arg1, char *arg2)
@@ -422,6 +433,7 @@ int main()
     EXT_DATA memData[MAX_DATA_BLOCKS];
     EXT_DATA fileData[MAX_PARTITION_BLOCKS];
     int dirEntry;
+    int saveData;
     FILE *file;
 
     // Clear the terminal
@@ -475,6 +487,7 @@ int main()
         else if (strcmp(command, "rename") == 0)
         {
             Rename(directory, &ext_inode_blocks, arg1, arg2);
+            saveData = 1;
         }
         else if (strcmp(command, "print") == 0)
         {
@@ -483,10 +496,12 @@ int main()
         else if (strcmp(command, "remove") == 0)
         {
             Delete(directory, &ext_inode_blocks, &ext_bytemaps, &ext_superblock, arg1, file);
+            saveData = 1;
         }
         else if (strcmp(command, "copy") == 0)
         {
             Copy(directory, &ext_inode_blocks, &ext_bytemaps, &ext_superblock, memData, arg1, arg2, file);
+            saveData = 1;
         }
 
         // Save metadata after modifying the filesystem
@@ -494,31 +509,17 @@ int main()
         SaveByteMaps(&ext_bytemaps, file);
         SaveSuperBlock(&ext_superblock, file);
 
+        if (saveData)
+        {
+            SaveData(memData, file);
+        }
+
+        saveData = 0; // Reset flag
+
         // Handle the "exit" command
         if (strcmp(cmd, "exit") == 0)
         {
-            char saveData[2]; // Char for choice and null terminator
-
-            while (1)
-            {
-                printf("Do you want to save data before exiting? Enter 1 (Yes) or 0 (No): ");
-                fflush(stdin);
-                fgets(saveData, sizeof(saveData), stdin);
-
-                if (strcmp(saveData, "0") == 0)
-                {
-                    break;
-                }
-                else if (strcmp(saveData, "1") == 0)
-                {
-                    SaveData(memData, file);
-                    break;
-                }
-                else
-                {
-                    printf("Invalid input. Please enter '0' to exit without saving or '1' to save and exit: ");
-                }
-            }
+            SaveData(memData, file);
             fclose(file);
             return 0;
         }
