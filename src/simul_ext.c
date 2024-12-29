@@ -61,7 +61,7 @@ void ListDirectory(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes)
     {
         if (directory[i].dir_inode != NULL_INODE)
         {
-            // Looks up directory[i].dir_inode in inodes array
+            // Looks up directory[i].dir_inode  in inodes array
             EXT_SIMPLE_INODE *inode = &inodes->inode_blocks[directory[i].dir_inode];
 
             printf("%-14s\tSize: %d\t I-node: %d, Blocks: ",
@@ -130,8 +130,32 @@ int Rename(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, char *oldName, char
 
 int Print(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes, EXT_DATA *memData, char *name)
 {
-    printf("Print called with name: %s\n", name);
-    return 0; // Temporary default
+    // Find the file in the directory
+    int fileIndex = FindFile(directory, inodes, name);    
+    //if it returns -1 it means that it does not exist
+    if (fileIndex == -1)
+    {
+        printf("error- the file %s was not found",name);
+        return -1;
+    }
+
+    int inodeNum = directory[fileIndex].dir_inode; // this gets the inode number of the file
+    EXT_SIMPLE_INODE *inode = &inodes->inode_blocks[inodeNum];
+    // pointer of inode to get metadata
+
+    for (int i = 0; i < MAX_BLOCKS_PER_INODE; i++) // for that goes through each block in the inode
+    {
+        if (inode->i_nblock[i] != NULL_BLOCK) // if to check if it is valid, if it is a null block it skips
+        {
+            char *blockData = (char *)memData[inode->i_nblock[i]].data; // gets the data ffrom the block. i increases for each loop so we get all 
+
+            for (int j = 0; j < BLOCK_SIZE; j++) // prints each byte in the block. it loops until it prints everything
+            {
+                printf("%c",blockData[j]);
+            }
+        }
+    }
+    return 0;
 }
 
 int Delete(EXT_ENTRY_DIR *directory, EXT_BLQ_INODES *inodes,
